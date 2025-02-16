@@ -10,8 +10,31 @@
 const uint I2C_SDA = 14;
 const uint I2C_SCL = 15;
 
+#define LED_BLUE  12  // GPIO do LED azul
+#define LED_RED   13  // GPIO do LED vermelho
+#define BUTTON_A  5   // GPIO do Botão A
+#define BUTTON_B  6   // GPIO do Botão B
+
 int main()
 {
+        // Configuração dos LEDs como saída
+        gpio_init(LED_BLUE);
+        gpio_set_dir(LED_BLUE, GPIO_OUT);
+        gpio_put(LED_BLUE, false);  // Inicia apagado
+    
+        gpio_init(LED_RED);
+        gpio_set_dir(LED_RED, GPIO_OUT);
+        gpio_put(LED_RED, false);  // Inicia apagado
+    
+        // Configuração dos botões como entrada com pull-up interno
+        gpio_init(BUTTON_A);
+        gpio_set_dir(BUTTON_A, GPIO_IN);
+        gpio_pull_up(BUTTON_A);
+    
+        gpio_init(BUTTON_B);
+        gpio_set_dir(BUTTON_B, GPIO_IN);
+        gpio_pull_up(BUTTON_B);
+
     stdio_init_all();   // Inicializa os tipos stdio padrão presentes ligados ao binário
 
     // Inicialização do i2c
@@ -138,8 +161,33 @@ restart:
 
 
     while(true) {
-        sleep_ms(1000);
+         // Lê os estados dos botões (LOW = pressionado, HIGH = solto)
+         bool button_a_pressed = !gpio_get(BUTTON_A);
+         bool button_b_pressed = !gpio_get(BUTTON_B);
+ 
+         if (button_a_pressed && button_b_pressed) {
+             // Ambos pressionados -> LED lilás (azul + vermelho)
+             gpio_put(LED_BLUE, true);
+             gpio_put(LED_RED, true);
+         } else if (button_a_pressed) {
+             // Apenas botão A -> LED azul
+             gpio_put(LED_BLUE, true);
+             gpio_put(LED_RED, false);
+         } else if (button_b_pressed) {
+             // Apenas botão B -> LED vermelho
+             gpio_put(LED_BLUE, false);
+             gpio_put(LED_RED, true);
+         } else {
+             // Nenhum pressionado -> LED apagado
+             gpio_put(LED_BLUE, false);
+             gpio_put(LED_RED, false);
+         }
+ 
+         // Pequeno delay para evitar oscilações
+         sleep_ms(150);
     }
 
     return 0;
 }
+
+
